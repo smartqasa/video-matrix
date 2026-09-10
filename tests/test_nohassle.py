@@ -58,6 +58,21 @@ def test_switchstatus_is_not_a_substitute(payload):
         parse_status(payload)
 
 
+def test_unexpected_status_diagnostic_is_bounded_and_omits_private_values():
+    with pytest.raises(MatrixProtocolError, match="comhead='video switch'"):
+        parse_status({"comhead": "video switch", "private": "secret label"})
+    for payload in (
+        {"comhead": "secret" * 1000, "allsource": ["private label"]},
+        {"comhead": {"secret": "private label"}},
+        ["private label"],
+    ):
+        with pytest.raises(MatrixProtocolError) as error:
+            parse_status(payload)
+        assert len(str(error.value)) < 150
+        assert "secret" not in str(error.value)
+        assert "private" not in str(error.value)
+
+
 def test_oversized_numeric_string_is_protocol_error(payload):
     payload["allsource"][0] = "1" * 5000
     with pytest.raises(MatrixProtocolError):

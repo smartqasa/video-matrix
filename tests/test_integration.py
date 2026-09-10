@@ -12,7 +12,11 @@ from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.video_matrix.coordinator import MatrixCoordinator, source_labels
-from custom_components.video_matrix.drivers.base import MatrixConnectionError, MatrixIdentity
+from custom_components.video_matrix.drivers.base import (
+    MatrixConnectionError,
+    MatrixIdentity,
+    MatrixProtocolError,
+)
 from custom_components.video_matrix.drivers.nohassle import parse_status
 
 
@@ -129,6 +133,80 @@ async def test_failed_confirmation_marks_unavailable(hass, entry, driver):
     assert hass.states.get(entities[1]).attributes.get("source") is None
     with pytest.raises(HomeAssistantError, match="unavailable"):
         await entry.runtime_data.async_select_source(1, "Roku 2")
+    driver.async_select_source.assert_awaited_once()
+    assert driver.async_get_routes.await_count == 4  # Setup and three bounded reads.
+
+
+async def test_transient_confirmation_errors_recover_without_false_feedback(
+    hass, entry, driver, payload
+):
+    entities = await setup(hass, entry)
+    payload["allsource"][0] = 2
+    responses = [
+        MatrixProtocolError("Expected a get video status response"),
+        MatrixConnectionError("Read timed out"),
+        parse_status(payload),
+    ]
+
+    async def read():
+        state = hass.states.get(entities[1])
+        assert state.state == "on"
+        assert state.attributes["source"] == "Roku 1"
+        response = responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    driver.async_get_routes.side_effect = read
+    await select(hass, entities[1], "Roku 2")
+    assert responses == []
+    driver.async_select_source.assert_awaited_once_with(1, 2)
+    assert hass.states.get(entities[1]).attributes["source"] == "Roku 2"
+
+
+async def test_failed_write_reconciles_transient_reads_but_still_reports_write_error(
+    hass, entry, driver, payload
+):
+    entities = await setup(hass, entry)
+    payload["allsource"][0] = 2
+    driver.async_select_source.side_effect = MatrixConnectionError("Write timed out")
+    driver.async_get_routes.side_effect = [
+        MatrixProtocolError("Unexpected acknowledgement"),
+        MatrixConnectionError("Read timed out"),
+        parse_status(payload),
+    ]
+    with pytest.raises(HomeAssistantError, match="Write timed out"):
+        await select(hass, entities[1], "Roku 2")
+    driver.async_select_source.assert_awaited_once()
+    assert hass.states.get(entities[1]).attributes["source"] == "Roku 2"
+
+
+async def test_reconciliation_failure_preserves_write_error(hass, entry, driver):
+    entities = await setup(hass, entry)
+    driver.async_select_source.side_effect = MatrixConnectionError("Write timed out")
+    driver.async_get_routes.side_effect = MatrixProtocolError("Unexpected acknowledgement")
+    with pytest.raises(HomeAssistantError) as error:
+        await select(hass, entities[1], "Roku 2")
+    assert "Write timed out" in str(error.value)
+    assert "Unexpected acknowledgement" in str(error.value)
+    driver.async_select_source.assert_awaited_once()
+    assert driver.async_get_routes.await_count == 4
+    assert all(hass.states.get(entity).state == "unavailable" for entity in entities.values())
+
+
+@pytest.mark.parametrize("last_read_fails", [False, True])
+async def test_mixed_read_errors_and_wrong_routes_never_confirm(
+    hass, entry, driver, last_read_fails
+):
+    entities = await setup(hass, entry)
+    actual = driver.async_get_routes.return_value
+    failure = MatrixProtocolError("Unexpected acknowledgement")
+    driver.async_get_routes.side_effect = [failure, actual, failure if last_read_fails else actual]
+    with pytest.raises(HomeAssistantError):
+        await select(hass, entities[1], "Roku 2")
+    state = hass.states.get(entities[1])
+    assert state.state == ("unavailable" if last_read_fails else "on")
+    assert state.attributes.get("source") == (None if last_read_fails else "Roku 1")
     driver.async_select_source.assert_awaited_once()
 
 

@@ -20,6 +20,18 @@ MODELS = {NHAV_8X16V5.model: NHAV_8X16V5}
 MAX_RESPONSE_BYTES = 64 * 1024
 
 
+def _status_response_summary(payload: Any) -> str:
+    """Describe only protocol shape; never include arbitrary values or device labels."""
+    if not isinstance(payload, dict):
+        return f"JSON {type(payload).__name__}"
+    command = payload.get("comhead")
+    # Only protocol command names are safe to include in diagnostics. Unknown
+    # text could contain user data, so report its type rather than its value.
+    known_commands = ("video switch", "get status", "get output status", "get video status")
+    command_summary = repr(command) if command in known_commands else type(command).__name__
+    return f"JSON object, comhead={command_summary}, allsource present={'allsource' in payload}"
+
+
 def _integer(value: Any, field: str) -> int:
     """Accept integers and decimal strings, but never floats or booleans."""
     if type(value) is int:
@@ -41,7 +53,9 @@ def _names(payload: dict, field: str, count: int) -> tuple[str, ...]:
 def parse_status(payload: Any, identity: MatrixIdentity = NHAV_8X16V5) -> RoutingSnapshot:
     """Validate the documented video response, including its optional sentinel."""
     if not isinstance(payload, dict) or payload.get("comhead") != "get video status":
-        raise MatrixProtocolError("Expected a get video status response")
+        raise MatrixProtocolError(
+            f"Expected a get video status response; received {_status_response_summary(payload)}"
+        )
     inputs = _names(payload, "allinputname", identity.input_count)
     outputs = _names(payload, "alloutputname", identity.output_count)
     hdbt = _names(payload, "allhdbtoutputname", identity.output_count)

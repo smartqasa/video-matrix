@@ -8,16 +8,27 @@ from homeassistant.helpers import entity_registry as er
 
 
 @pytest.mark.usefixtures("socket_enabled")
-async def test_real_driver_setup_switch_feedback_and_unload(hass, entry, payload, aiohttp_server):
+@pytest.mark.parametrize("stale_acknowledgements", [0, 2])
+async def test_real_driver_setup_switch_feedback_and_unload(
+    hass, entry, payload, aiohttp_server, stale_acknowledgements
+):
     commands = []
+    pending_acknowledgements = 0
 
     async def handler(request):
+        nonlocal pending_acknowledgements
         command = json.loads(await request.text())
         commands.append(command)
         if command["comhead"] == "video switch":
             source, output = command["source"]
             payload["allsource"][output - 1] = source
+            pending_acknowledgements = stale_acknowledgements
             return web.Response(text="")
+        if pending_acknowledgements:
+            pending_acknowledgements -= 1
+            # NHAV-8X16V5 returns this write acknowledgement to status requests
+            # while settling. It has no routing snapshot and must never be used.
+            return web.json_response({"comhead": "video switch"})
         return web.json_response(payload)
 
     app = web.Application()
@@ -43,6 +54,5 @@ async def test_real_driver_setup_switch_feedback_and_unload(hass, entry, payload
     assert commands == [
         {"comhead": "get video status"},
         {"comhead": "video switch", "source": [2, 1]},
-        {"comhead": "get video status"},
-    ]
+    ] + [{"comhead": "get video status"}] * (1 + stale_acknowledgements)
     assert await hass.config_entries.async_unload(entry.entry_id)

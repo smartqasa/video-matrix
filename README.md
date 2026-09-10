@@ -6,11 +6,11 @@ future Blustream and other drivers use the same entities and dashboard card.
 
 ## Status
 
-The first preview, **0.1.0b1**, is available for installation through HACS.
+The current preview, **0.1.0b2**, is available for installation through HACS.
 Implemented and tested with Home Assistant 2026.9.1 and Python 3.14; the first
 release targets HA 2026.9 or newer. Automated tests use simulated devices.
-Direct JSON switching and physical picture changes on the NHAV-8X16V5 still need
-a hardware acceptance test. No running Home Assistant instance has been modified.
+Direct JSON switching and route readback have been exercised on the NHAV-8X16V5.
+Physical picture changes still need a hardware acceptance test.
 
 | Manufacturer | Model | Inputs | Independent outputs | Feedback |
 | --- | --- | --- | --- | --- |
@@ -26,7 +26,8 @@ See [protocol evidence](docs/nohassle-protocol.md).
   `source`, `source_list`, and `media_player.select_source`.
 - One shared read every ten seconds, including changes made outside HA.
 - Serialized switching and read-back confirmation. Up to three reads, half a
-  second apart, allow routes to settle. Writes are never automatically repeated.
+  second apart, allow routes to settle. Transient read failures and stale command
+  acknowledgements also use this bounded retry budget. Writes are never repeated.
 - Failed reads mark outputs unavailable. A valid power state of zero means off.
   There are no unverified power, volume, or playback controls.
 - Optional friendly source names mapped to stable input numbers. Duplicate names
@@ -38,7 +39,7 @@ See [protocol evidence](docs/nohassle-protocol.md).
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/smartqasa/video-matrix` with type **Integration**.
 3. Open **Video Matrix** in HACS and choose **Download**. Expand
-   **Need a different version?** and select the `0.1.0b1` prerelease. HACS downloads
+   **Need a different version?** and select the `0.1.0b2` prerelease. HACS downloads
    the files into the correct directory. Restart HA if HACS requests it.
 4. Enable beta update tracking under
    **Settings → Devices & services → HACS → Video Matrix**. Under **Diagnostic**,

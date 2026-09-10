@@ -50,9 +50,17 @@ entity boundary.
 ```
 
 The array is `[input, output_zone]`, using one-based numbers. This requests
-input 2 on zone 1. The command was identified in the device's web UI code;
-this JSON write path has not yet been exercised directly on the hardware.
-Do not claim it works until a physical switching and feedback test passes.
+input 2 on zone 1. Direct JSON switching and route readback were verified on
+September 10, 2026. A test route was changed and restored, with the complete route
+array checked after restoration. Physical picture verification remains pending.
+
+During a real route change, subsequent `get video status` requests can return a
+39-byte JSON acknowledgement with `comhead: "video switch"` and no `allsource`.
+One test needed a second status read; restoring the route needed a third read.
+The stale acknowledgements took about three seconds each. A same-route write
+did not reproduce this behavior. An acknowledgement must never count as routing
+feedback: retry status reads within the confirmation budget, without resending
+the switching command or accepting the wrong response shape.
 
 The user confirmed that their existing Home Assistant integration can switch
 inputs. They subsequently reported that selected-source feedback is missing.
@@ -95,7 +103,7 @@ Shared polling follows its
 
 ## Still to verify
 
-- Direct JSON switching and its success/error response format.
+- Write acknowledgement success/error fields beyond the observed command identity.
 - Physical picture changes and mirrored connector behavior.
 - Powered-off, disconnected, malformed, and partially populated responses.
 - Command/status sequencing while the web UI is also active.
@@ -113,8 +121,13 @@ names, and eight one-based routes. Only the optional ninth zero is discarded.
 Missing, partial, or out-of-range data fails the snapshot rather than preserving
 stale selected-source feedback.
 
-JSON switching is implemented with serialized read-back confirmation. Its
-acknowledgement body remains unverified and is not proof of success. HTTP errors
-are surfaced; HTTP 200 is followed by reads that must show the requested route.
-Automated tests use simulated devices; physical tests remain pending. See
+JSON switching is implemented with serialized read-back confirmation. An
+acknowledgement is not proof of success. HTTP errors are surfaced; HTTP 200 is
+followed by up to three reads that must show the requested route. Protocol or
+connection failures during confirmation consume a read attempt, without briefly
+marking every output unavailable if a later attempt succeeds. Exhausted failed
+reads still make the outputs unavailable. If the write itself failed, its error
+is preserved even if subsequent status reconciliation also fails. Diagnostics
+include bounded JSON shape and allowlisted command identity, not arbitrary payloads.
+Automated tests use simulated devices; physical picture tests remain pending. See
 [testing](testing.md) and [reference review](reference-integrations.md).

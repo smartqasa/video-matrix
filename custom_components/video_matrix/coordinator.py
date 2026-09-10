@@ -60,14 +60,33 @@ class MatrixCoordinator(DataUpdateCoordinator[RoutingSnapshot]):
             except MatrixError as err:
                 raise UpdateFailed(str(err)) from err
 
-    async def _read_and_publish(self) -> RoutingSnapshot:
-        try:
-            snapshot = await self.driver.async_get_routes()
-        except MatrixError as err:
-            self.async_set_update_error(UpdateFailed(str(err)))
-            raise
-        self.async_set_updated_data(snapshot)
-        return snapshot
+    async def _read_after_write(self, expected: tuple[int, int] | None = None) -> None:
+        """Retry bounded status reads; never resend a write or publish an acknowledgement."""
+        for attempt in range(CONFIRM_ATTEMPTS):
+            try:
+                snapshot = await self.driver.async_get_routes()
+            except MatrixError as err:
+                _LOGGER.debug(
+                    "Status read after routing failed (%s/%s): %s",
+                    attempt + 1,
+                    CONFIRM_ATTEMPTS,
+                    err,
+                )
+                if attempt == CONFIRM_ATTEMPTS - 1:
+                    self.async_set_update_error(UpdateFailed(str(err)))
+                    raise
+            else:
+                self.async_set_updated_data(snapshot)
+                if expected is None:
+                    return
+                output, source = expected
+                if snapshot.powered_on and snapshot.routes[output - 1] == source:
+                    return
+                if attempt == CONFIRM_ATTEMPTS - 1:
+                    raise MatrixCommandError(
+                        f"Matrix did not confirm input {source} on output {output}"
+                    )
+            await asyncio.sleep(CONFIRM_DELAY)
 
     async def async_select_source(self, output: int, source_name: str) -> None:
         """Serialize the whole write/read-back transaction against commands and polls."""
@@ -85,20 +104,18 @@ class MatrixCoordinator(DataUpdateCoordinator[RoutingSnapshot]):
             try:
                 try:
                     await self.driver.async_select_source(output, source)
-                except MatrixError:
+                except MatrixError as write_error:
                     # A timed-out write may have reached the hardware. Reconcile,
                     # but never blindly resend or report that write as successful.
-                    await self._read_and_publish()
+                    try:
+                        await self._read_after_write()
+                    except MatrixError as read_error:
+                        raise MatrixCommandError(
+                            f"Routing write failed: {write_error}; "
+                            f"status reconciliation also failed: {read_error}"
+                        ) from write_error
                     raise
-                for attempt in range(CONFIRM_ATTEMPTS):
-                    snapshot = await self._read_and_publish()
-                    if snapshot.powered_on and snapshot.routes[output - 1] == source:
-                        return
-                    if attempt < CONFIRM_ATTEMPTS - 1:
-                        await asyncio.sleep(CONFIRM_DELAY)
-                raise MatrixCommandError(
-                    f"Matrix did not confirm input {source} on output {output}"
-                )
+                await self._read_after_write((output, source))
             except MatrixError as err:
                 raise HomeAssistantError(str(err)) from err
             except asyncio.CancelledError:
