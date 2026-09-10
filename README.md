@@ -34,9 +34,10 @@ See [protocol evidence](docs/nohassle-protocol.md).
 
 ## Installation
 
-1. Copy `custom_components/video_matrix` into HA's `/config/custom_components/`.
-   The beta implementation can be installed through HACS by adding
-   `https://github.com/smartqasa/video-matrix` as a custom **Integration** repository.
+1. Download/check out the **beta** branch and copy `custom_components/video_matrix`
+   into HA's `/config/custom_components/`. The default `main` branch still contains
+   design notes only. HACS metadata is included for a future stable release;
+   use the manual beta installation for this initial hardware validation.
 2. Restart HA and open **Settings → Devices & services → Add integration → Video Matrix**.
 3. Select **No Hassle AV**, enter the host/IP and HTTP port (normally 80), and
    choose **NHAV-8X16V5**. Setup validates a read without changing routes.
@@ -108,8 +109,8 @@ the behavior of that installation.
 
 `main` is the stable branch. `beta` contains ongoing development and hardware
 validation work. The initial implementation goes to `beta`; promote a reviewed,
-validated beta revision to `main` when ready. Configure HACS/downloads to use the
-appropriate branch and avoid treating beta as a hardware-validated release.
+validated beta revision to `main` when ready. Download the appropriate branch and
+avoid treating beta as a hardware-validated release.
 
 ```sh
 python3.14 -m venv .venv
