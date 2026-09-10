@@ -7,13 +7,32 @@ servers where transport matters. They do not contact household devices.
 
 `fixtures/video_status.json` is a **reconstructed minimal response** using the
 documented field shape and route values with illustrative labels. It is not a
-verbatim complete capture. Malformed/off/delayed responses are synthetic. Off-state
-schema and confirmation timing still need hardware verification.
+verbatim complete capture. Malformed/off responses are synthetic. Off-state
+schema still needs hardware verification. Stale acknowledgement sequencing is
+based on the live observations below.
 
 Tests cover the trailing zero, missing `allsource`, wrong command identity,
 counts/ranges/types, duplicate labels, HTTP/JSON errors, redirects, size limits,
 timeouts, serialization, cancellation, UI setup/options/reconfiguration, stable
 IDs, one poll for all zones, switching, external changes, recovery, and unload.
+
+## Live checks on September 10, 2026
+
+On an NHAV-8X16V5 running firmware V1.13.24:
+
+- A direct JSON route change returned a `video switch` acknowledgement. The
+  first status read also returned that acknowledgement, and the second returned
+  valid routing data. Restoring the route needed three status reads. The complete
+  route array was checked after restoration.
+- After installing 0.1.0b2 and restarting HA, standard `media_player.select_source`
+  calls changed a test output to another source and restored it. HA feedback and
+  the SmartQasa matrix card showed the requested source after each call. A matrix
+  log search found no errors after these calls.
+- Device labels and HA `source_list` matched; existing card display-name overrides
+  continued to work with the device's exact source values.
+
+These checks establish route readback and HA/card feedback. They do not establish
+physical picture changes, power-state handling, or every acceptance item below.
 
 ## Hardware acceptance (pending)
 
