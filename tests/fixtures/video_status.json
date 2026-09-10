@@ -1,0 +1,8 @@
+{
+  "comhead": "get video status",
+  "power": 1,
+  "allsource": [1, 3, 1, 4, 5, 6, 7, 8, 0],
+  "allinputname": ["Roku 1", "Roku 2", "Roku 3", "Roku 4", "Media Server", "Input 6", "Input 7", "Input 8"],
+  "alloutputname": ["Living Room", "Dining Room", "Office", "Veranda", "Output 5", "Output 6", "Output 7", "Output 8"],
+  "allhdbtoutputname": ["Living Room HDBT", "Dining Room HDBT", "Office HDBT", "Veranda HDBT", "HDBT 5", "HDBT 6", "HDBT 7", "HDBT 8"]
+}

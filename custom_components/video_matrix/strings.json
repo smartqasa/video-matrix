@@ -1,0 +1,43 @@
+{
+  "title": "Video Matrix",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Video Matrix",
+        "description": "Choose your matrix manufacturer.",
+        "data": {"driver": "Manufacturer"}
+      },
+      "connection": {
+        "title": "Connect to your matrix",
+        "description": "Select the exact model. Setup reads its status without changing any routes.",
+        "data": {"host": "Host or IP address", "port": "Port", "name": "Name", "model": "Model"}
+      },
+      "reconfigure": {
+        "title": "Update matrix connection",
+        "description": "Update the address of the same matrix while keeping its entities and names.",
+        "data": {"host": "Host or IP address", "port": "Port"}
+      }
+    },
+    "error": {
+      "invalid_host": "Enter only a hostname or IP address, without a URL, path, or port.",
+      "cannot_connect": "Could not connect. Check the address, port, power, and network connection.",
+      "invalid_response": "The matrix returned incomplete or unsupported status. Check the selected model and firmware."
+    },
+    "abort": {
+      "already_configured": "A matrix at this address and port is already configured.",
+      "reconfigure_successful": "The matrix connection has been updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Source names",
+        "description": "Optional names for the numbered matrix inputs. Leave a field blank to use its device label. Match your dashboard source values to the resulting names.",
+        "data": {
+          "input_1": "Input 1", "input_2": "Input 2", "input_3": "Input 3", "input_4": "Input 4",
+          "input_5": "Input 5", "input_6": "Input 6", "input_7": "Input 7", "input_8": "Input 8"
+        }
+      }
+    }
+  }
+}

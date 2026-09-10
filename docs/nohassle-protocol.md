@@ -104,3 +104,17 @@ Shared polling follows its
 
 Device addresses, credentials, and household configuration are deliberately
 excluded from repository examples.
+
+## Implemented behavior
+
+The `video_matrix` integration now uses `get video status` and parses `allsource`.
+Its NHAV-8X16V5 profile validates eight input names, eight HDMI names, eight HDBaseT
+names, and eight one-based routes. Only the optional ninth zero is discarded.
+Missing, partial, or out-of-range data fails the snapshot rather than preserving
+stale selected-source feedback.
+
+JSON switching is implemented with serialized read-back confirmation. Its
+acknowledgement body remains unverified and is not proof of success. HTTP errors
+are surfaced; HTTP 200 is followed by reads that must show the requested route.
+Automated tests use simulated devices; physical tests remain pending. See
+[testing](testing.md) and [reference review](reference-integrations.md).
