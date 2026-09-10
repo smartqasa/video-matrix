@@ -37,12 +37,17 @@ See [protocol evidence](docs/nohassle-protocol.md).
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/smartqasa/video-matrix` with type **Integration**.
-3. Open **Video Matrix** in HACS and choose **Download**. Select `0.1.0b1` if beta
-   versions are shown. Otherwise, select `main`, which contains the same initial
-   preview. HACS downloads the files into the correct directory.
-4. Restart HA if HACS requests it, then open
-   **Settings → Devices & services → Add integration → Video Matrix**.
-5. Select **No Hassle AV**, enter the host/IP and HTTP port (normally 80), and
+3. Open **Video Matrix** in HACS and choose **Download**. Expand
+   **Need a different version?** and select the `0.1.0b1` prerelease. HACS downloads
+   the files into the correct directory. Restart HA if HACS requests it.
+4. Enable beta update tracking under
+   **Settings → Devices & services → HACS → Video Matrix**. Under **Diagnostic**,
+   expand **+1 disabled entity**, open **Pre-release**, and use its settings to
+   **Enable** the entity. Allow about 30 seconds for it to appear, then turn the
+   **Pre-release** switch on. Selecting a beta download alone does not enable
+   beta update tracking.
+5. Open **Settings → Devices & services → Add integration → Video Matrix**.
+   Select **No Hassle AV**, enter the host/IP and HTTP port (normally 80), and
    choose **NHAV-8X16V5**. Setup validates a read without changing routes.
 6. Optionally use **Configure** to override input names. Blank fields use device
    labels. Rename output entities and assign their areas through HA.
@@ -52,6 +57,13 @@ The repository is public and its default `main` branch contains the complete
 the repository even when prereleases are hidden. If you previously received
 “Repository structure for main is not compliant,” close the custom-repository
 dialog, reopen it, and add the repository again.
+
+If HA shows installed version `0.1.0b1` but a latest version such as `29f18e9`,
+enable the **Pre-release** switch above. With beta tracking off and no stable
+release published, HACS compares the installed beta tag with the default branch's
+commit ID. Those can contain identical code and still produce an update notice.
+Beta tracking makes HACS compare release versions and notify you of future betas.
+See [HACS switch documentation](https://hacs.xyz/docs/use/entities/switch/).
 
 For installation without HACS, copy `custom_components/video_matrix` from the
 desired release into HA's `/config/custom_components/` and restart HA.
