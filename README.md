@@ -34,7 +34,7 @@ See [protocol evidence](docs/nohassle-protocol.md).
 
 ## Installation
 
-1. For the current private repository, download/check out the **beta** branch and
+1. Until a HACS-installable release is available, download/check out the **beta** branch and
    copy `custom_components/video_matrix` into HA's `/config/custom_components/`.
    See the HACS publishing requirements below.
 2. Restart HA and open **Settings → Devices & services → Add integration → Video Matrix**.
@@ -49,21 +49,17 @@ HACS is the intended route for installation and updates once the repository is
 prepared for distribution. Manual copying is a temporary workaround, not a
 requirement of this integration or of beta testing.
 
-The current blockers are:
+The repository is now **public**, satisfying HACS's visibility requirement.
+The remaining blocker is the distribution layout: the default `main` branch
+contains design notes only, and no GitHub release packages the implementation yet.
+HACS uses published releases or the default branch; the separate development
+branch is not automatically offered. See
+[HACS integration publishing](https://hacs.xyz/docs/publish/integration/).
 
-- The repository is **private**. HACS only accesses public GitHub repositories,
-  including when adding a custom repository. See the
-  [HACS private-repository policy](https://hacs.xyz/docs/faq/private_repositories/).
-- The default `main` branch contains design notes only, and no GitHub release
-  packages the implementation yet. HACS uses published releases or the default
-  branch; the separate development branch is not automatically offered. See
-  [HACS integration publishing](https://hacs.xyz/docs/publish/integration/).
-
-Enabling HACS installation requires an explicitly approved public repository and
-an installable default branch/release layout. Beta builds can then be distributed
-as clearly marked prereleases while keeping `main` and `beta` as separate branches.
-The included `hacs.json` and integration layout provide the packaging foundation;
-they do not by themselves make this private repository installable through HACS.
+Enabling HACS installation still requires an installable default branch/release
+layout. Beta builds can then be distributed as clearly marked prereleases while
+keeping `main` and `beta` separate. The included `hacs.json` and integration layout
+provide the packaging foundation.
 
 This profile uses the documented unauthenticated HTTP endpoint. HTTPS,
 authentication, older `SwitchStatus` firmware, and alternate endpoints are not
