@@ -6,6 +6,7 @@ future Blustream and other drivers use the same entities and dashboard card.
 
 ## Status
 
+The first preview, **0.1.0b1**, is available for installation through HACS.
 Implemented and tested with Home Assistant 2026.9.1 and Python 3.14; the first
 release targets HA 2026.9 or newer. Automated tests use simulated devices.
 Direct JSON switching and physical picture changes on the NHAV-8X16V5 still need
@@ -34,32 +35,26 @@ See [protocol evidence](docs/nohassle-protocol.md).
 
 ## Installation
 
-1. Until a HACS-installable release is available, download/check out the **beta** branch and
-   copy `custom_components/video_matrix` into HA's `/config/custom_components/`.
-   See the HACS publishing requirements below.
-2. Restart HA and open **Settings → Devices & services → Add integration → Video Matrix**.
-3. Select **No Hassle AV**, enter the host/IP and HTTP port (normally 80), and
+1. Open **HACS → ⋮ → Custom repositories**.
+2. Add `https://github.com/smartqasa/video-matrix` with type **Integration**.
+3. Open **Video Matrix** in HACS and choose **Download**. Select `0.1.0b1` if beta
+   versions are shown. Otherwise, select `main`, which contains the same initial
+   preview. HACS downloads the files into the correct directory.
+4. Restart HA if HACS requests it, then open
+   **Settings → Devices & services → Add integration → Video Matrix**.
+5. Select **No Hassle AV**, enter the host/IP and HTTP port (normally 80), and
    choose **NHAV-8X16V5**. Setup validates a read without changing routes.
-4. Optionally use **Configure** to override input names. Blank fields use device
+6. Optionally use **Configure** to override input names. Blank fields use device
    labels. Rename output entities and assign their areas through HA.
 
-### HACS installation
+The repository is public and its default `main` branch contains the complete
+`custom_components/video_matrix` directory and `hacs.json`. This lets HACS validate
+the repository even when prereleases are hidden. If you previously received
+“Repository structure for main is not compliant,” close the custom-repository
+dialog, reopen it, and add the repository again.
 
-HACS is the intended route for installation and updates once the repository is
-prepared for distribution. Manual copying is a temporary workaround, not a
-requirement of this integration or of beta testing.
-
-The repository is now **public**, satisfying HACS's visibility requirement.
-The remaining blocker is the distribution layout: the default `main` branch
-contains design notes only, and no GitHub release packages the implementation yet.
-HACS uses published releases or the default branch; the separate development
-branch is not automatically offered. See
-[HACS integration publishing](https://hacs.xyz/docs/publish/integration/).
-
-Enabling HACS installation still requires an installable default branch/release
-layout. Beta builds can then be distributed as clearly marked prereleases while
-keeping `main` and `beta` separate. The included `hacs.json` and integration layout
-provide the packaging foundation.
+For installation without HACS, copy `custom_components/video_matrix` from the
+desired release into HA's `/config/custom_components/` and restart HA.
 
 This profile uses the documented unauthenticated HTTP endpoint. HTTPS,
 authentication, older `SwitchStatus` firmware, and alternate endpoints are not
@@ -124,10 +119,12 @@ the behavior of that installation.
 
 ## Development
 
-`main` is the stable branch. `beta` contains ongoing development and hardware
-validation work. The initial implementation goes to `beta`; promote a reviewed,
-validated beta revision to `main` when ready. Download the appropriate branch and
-avoid treating beta as a hardware-validated release.
+`main` holds the installable release baseline that HACS validates. `beta` contains
+ongoing development and hardware validation work. The initial baseline is explicitly
+a **beta preview**, not a hardware-validated stable release. Publish previews as
+GitHub prereleases (`0.1.0b1`, `0.1.0b2`, ...) and promote reviewed beta revisions to
+`main`; stable releases follow successful hardware validation. Both branches retain
+the complete integration layout. Keep each release tag and manifest version aligned.
 
 ```sh
 python3.14 -m venv .venv
