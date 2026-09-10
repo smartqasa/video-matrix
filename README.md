@@ -34,15 +34,36 @@ See [protocol evidence](docs/nohassle-protocol.md).
 
 ## Installation
 
-1. Download/check out the **beta** branch and copy `custom_components/video_matrix`
-   into HA's `/config/custom_components/`. The default `main` branch still contains
-   design notes only. HACS metadata is included for a future stable release;
-   use the manual beta installation for this initial hardware validation.
+1. For the current private repository, download/check out the **beta** branch and
+   copy `custom_components/video_matrix` into HA's `/config/custom_components/`.
+   See the HACS publishing requirements below.
 2. Restart HA and open **Settings → Devices & services → Add integration → Video Matrix**.
 3. Select **No Hassle AV**, enter the host/IP and HTTP port (normally 80), and
    choose **NHAV-8X16V5**. Setup validates a read without changing routes.
 4. Optionally use **Configure** to override input names. Blank fields use device
    labels. Rename output entities and assign their areas through HA.
+
+### HACS installation
+
+HACS is the intended route for installation and updates once the repository is
+prepared for distribution. Manual copying is a temporary workaround, not a
+requirement of this integration or of beta testing.
+
+The current blockers are:
+
+- The repository is **private**. HACS only accesses public GitHub repositories,
+  including when adding a custom repository. See the
+  [HACS private-repository policy](https://hacs.xyz/docs/faq/private_repositories/).
+- The default `main` branch contains design notes only, and no GitHub release
+  packages the implementation yet. HACS uses published releases or the default
+  branch; the separate development branch is not automatically offered. See
+  [HACS integration publishing](https://hacs.xyz/docs/publish/integration/).
+
+Enabling HACS installation requires an explicitly approved public repository and
+an installable default branch/release layout. Beta builds can then be distributed
+as clearly marked prereleases while keeping `main` and `beta` as separate branches.
+The included `hacs.json` and integration layout provide the packaging foundation;
+they do not by themselves make this private repository installable through HACS.
 
 This profile uses the documented unauthenticated HTTP endpoint. HTTPS,
 authentication, older `SwitchStatus` firmware, and alternate endpoints are not
