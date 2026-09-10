@@ -1,6 +1,12 @@
-# SmartQasa Matrix
+# Video Matrix
 
 Home Assistant integration for video matrix devices, starting with No Hassle AV.
+
+## Branches
+
+The [beta branch](https://github.com/smartqasa/video-matrix/tree/beta) contains the
+first integration implementation and ongoing development. Main is reserved for
+validated releases and currently contains the original design notes.
 
 ## Status
 
@@ -35,7 +41,7 @@ The common interface should not hard-code the number of zones for other models.
 ## Planned structure
 
 ```text
-custom_components/smartqasa_matrix/
+custom_components/video_matrix/
   __init__.py          Integration setup and unload
   manifest.json       Integration metadata
   const.py            Shared constants
