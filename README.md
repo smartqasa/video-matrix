@@ -6,7 +6,7 @@ future Blustream and other drivers use the same entities and dashboard card.
 
 ## Status
 
-The current preview, **0.1.0b2**, is available for installation through HACS.
+The current preview, **0.1.0b3**, is available for installation through HACS.
 Implemented and tested with Home Assistant 2026.9.1 and Python 3.14; the first
 release targets HA 2026.9 or newer. Automated tests use simulated devices.
 Direct JSON switching and route readback have been exercised on the NHAV-8X16V5.
@@ -39,7 +39,7 @@ See [protocol evidence](docs/nohassle-protocol.md).
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/smartqasa/video-matrix` with type **Integration**.
 3. Open **Video Matrix** in HACS and choose **Download**. Expand
-   **Need a different version?** and select the `0.1.0b2` prerelease. HACS downloads
+   **Need a different version?** and select the `0.1.0b3` prerelease. HACS downloads
    the files into the correct directory. Restart HA if HACS requests it.
 4. Enable beta update tracking under
    **Settings → Devices & services → HACS → Video Matrix**. Under **Diagnostic**,
