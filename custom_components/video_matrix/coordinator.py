@@ -5,7 +5,7 @@ import logging
 from collections import Counter
 from datetime import timedelta
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -48,6 +48,25 @@ class MatrixCoordinator(DataUpdateCoordinator[RoutingSnapshot]):
         self.driver = driver
         self._transaction_lock = asyncio.Lock()
         self._source_overrides = entry.options.get(CONF_SOURCE_NAMES, {})
+        self._stopping = False
+        self._shutdown_task: asyncio.Task[None] | None = None
+
+    async def async_shutdown(self) -> None:
+        """Reject new work and finish active I/O before closing the driver."""
+        self._stopping = True
+        task = self._shutdown_task
+        if task is None or (task.done() and (task.cancelled() or task.exception() is not None)):
+            task = self._shutdown_task = self.config_entry.async_create_task(
+                self.hass, self._async_finish_shutdown(), "Close matrix driver"
+            )
+        # An interrupted unload must not abandon driver cleanup. Subsequent
+        # shutdown calls await the same task, or retry a failed close.
+        await asyncio.shield(task)
+
+    async def _async_finish_shutdown(self) -> None:
+        await super().async_shutdown()
+        async with self._transaction_lock:
+            await self.driver.async_close()
 
     @property
     def sources(self) -> tuple[str, ...]:
@@ -55,6 +74,8 @@ class MatrixCoordinator(DataUpdateCoordinator[RoutingSnapshot]):
 
     async def _async_update_data(self) -> RoutingSnapshot:
         async with self._transaction_lock:
+            if self._stopping:
+                raise UpdateFailed("Matrix integration is unloaded")
             try:
                 return await self.driver.async_get_routes()
             except MatrixError as err:
@@ -91,6 +112,10 @@ class MatrixCoordinator(DataUpdateCoordinator[RoutingSnapshot]):
     async def async_select_source(self, output: int, source_name: str) -> None:
         """Serialize the whole write/read-back transaction against commands and polls."""
         async with self._transaction_lock:
+            if self._stopping or (
+                self.config_entry and self.config_entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS
+            ):
+                raise HomeAssistantError("Matrix integration is unloading or unloaded")
             if not self.last_update_success:
                 raise HomeAssistantError(
                     "Matrix is unavailable; wait for a successful status update"

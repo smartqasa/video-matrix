@@ -27,7 +27,6 @@ def create_driver(hass: HomeAssistant, data: dict) -> MatrixDriver:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     coordinator = MatrixCoordinator(hass, entry, create_driver(hass, entry.data))
-    entry.async_on_unload(coordinator.driver.async_close)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -40,4 +39,9 @@ async def _async_update_options(hass: HomeAssistant, entry: MatrixConfigEntry) -
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+    # Await cleanup here: HA limits how long it waits for on-unload callbacks.
+    # The coordinator also registers shutdown for setup failures and retries.
+    await entry.runtime_data.async_shutdown()
+    return True

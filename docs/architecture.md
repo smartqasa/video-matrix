@@ -44,6 +44,12 @@ raise an action error while preserving the last actual state. Read failure marks
 all entities unavailable. Failed writes trigger a read to reconcile possible
 hardware changes, but still raise the write error and are never blindly repeated.
 
+Shutdown rejects queued commands and waits for the active transaction before
+closing the driver. Successful unload waits for this cleanup; cancellation of a
+shutdown waiter does not abandon it. A failed platform unload keeps the driver
+usable. A newly loaded coordinator cannot reactivate commands queued on the old
+coordinator, and the shared Home Assistant HTTP session stays open.
+
 `media_player.py` knows only numeric outputs, snapshots, and HA features. It does
 not inspect vendor HTTP fields, assume eight outputs, or predict source changes.
 HA manages names, entity IDs, and areas. Source labels resolve at the entity

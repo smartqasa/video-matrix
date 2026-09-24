@@ -16,6 +16,12 @@ counts/ranges/types, duplicate labels, HTTP/JSON errors, redirects, size limits,
 timeouts, serialization, cancellation, UI setup/options/reconfiguration, stable
 IDs, one poll for all zones, switching, external changes, recovery, and unload.
 
+Recovery tests exercise HA's scheduled polling and initial-setup retry timers
+with the real HTTP driver, including unchanged routes after an outage. Lifecycle
+tests overlap standard source-selection actions with unload, verify queued
+commands are rejected, and cover cancellation, cleanup retries, and repeated
+setup without closing HA's shared HTTP session.
+
 ## Live checks on September 10, 2026
 
 On an NHAV-8X16V5 running firmware V1.13.24:
